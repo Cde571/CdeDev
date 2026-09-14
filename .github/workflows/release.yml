@@ -1,0 +1,31 @@
+name: Build release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install build dependencies
+        run: python -m pip install -r requirements-build.txt
+      - name: Build portable executable
+        run: pyinstaller --noconfirm --clean CdeDev.spec
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+      - name: Build installer
+        run: iscc installer.iss
+      - name: Publish release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: installer/CdeDev-Setup-*-x64.exe
+          generate_release_notes: true
