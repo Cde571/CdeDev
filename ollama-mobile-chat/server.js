@@ -13,6 +13,9 @@ const SECRET_FILE = path.join(__dirname, '.session-secret');
 const ADMIN_CODE_FILE = path.join(__dirname, '.access-code');
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
 const QWEN_MODEL = process.env.OLLAMA_MODEL || 'srchmnmichael/qwen3.5-9B-uncensored:latest';
+const OLLAMA_CONTEXT = Math.min(32768, Math.max(4096, Number.parseInt(process.env.OLLAMA_CONTEXT, 10) || 12288));
+const OLLAMA_PART_TOKENS = Math.min(4096, Math.max(32, Number.parseInt(process.env.OLLAMA_PART_TOKENS, 10) || 2048));
+const OLLAMA_MAX_PARTS = Math.min(8, Math.max(1, Number.parseInt(process.env.OLLAMA_MAX_PARTS, 10) || 4));
 const COOKIE_NAME = 'aurora_session';
 const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
 const SYSTEM_MESSAGE = 'Responde de forma clara, útil y bien estructurada. Usa Markdown. Para matemáticas usa LaTeX: \\( ... \\) en línea y \\[ ... \\] en bloque. Termina siempre la respuesta.';
@@ -27,7 +30,7 @@ const loginAttempts = new Map();
 let activeGeneration = false;
 
 const MODELS = [
-  { id: 'qwen', name: 'Uncensored', badge: 'Disponible', provider: 'Privado', priceLabel: '$60.000 COP · 6 meses', priceCop: 60000, durationDays: 180, description: 'Asistente de texto alojado en este equipo, con respuestas directas y gran libertad creativa.', theoreticalLimit: '262K de contexto (modelo)', serviceLimit: '4K de contexto · hasta 1K de salida', supportsImages: false, kind: 'chat', contactOnly: false, capabilities: ['Conversación y lluvia de ideas', 'Redacción, resumen y traducción', 'Programación y explicación de código', 'Matemáticas con fórmulas LaTeX', 'Sesiones de texto efímeras'] },
+  { id: 'qwen', name: 'Uncensored', badge: 'Disponible', provider: 'Privado', priceLabel: '$60.000 COP · 6 meses', priceCop: 60000, durationDays: 180, description: 'Asistente de texto alojado en este equipo, con respuestas directas y gran libertad creativa.', theoreticalLimit: '262K de contexto (modelo)', serviceLimit: '12K de contexto · hasta 8K de salida en partes', supportsImages: false, kind: 'chat', contactOnly: false, capabilities: ['Conversación y lluvia de ideas', 'Respuestas largas con continuación automática', 'Redacción, resumen y traducción', 'Programación y explicación de código', 'Matemáticas con fórmulas LaTeX', 'Sesiones de texto efímeras'] },
   { id: 'gpt', name: 'GPT-6 Astra', badge: 'Solicitar acceso', provider: 'OpenAI', priceLabel: '$40.000 COP · 1 mes', description: 'Razonamiento avanzado y visión. Solicita directamente tus credenciales por WhatsApp.', theoreticalLimit: '1,05M de contexto · 128K de salida', serviceLimit: 'Acceso mediante credenciales', supportsImages: true, kind: 'chat', contactOnly: true, capabilities: ['Razonamiento complejo y análisis', 'Comprensión de imágenes', 'Escritura profesional y código', 'Respuestas estructuradas y matemáticas', 'Flujos multimodales'] },
   { id: 'gemini', name: 'Gemini 3.8 Flash', badge: 'Solicitar acceso', provider: 'Google', priceLabel: '$40.000 COP · 1 mes', requirements: 'Este acceso requiere cumplir unas condiciones. Solicita los requisitos por WhatsApp antes de pagar.', description: 'Paquete de inteligencia artificial con 400 GB de almacenamiento y herramientas avanzadas. Acceso sujeto a requisitos.', theoreticalLimit: '400 GB de almacenamiento incluidos', serviceLimit: 'Acceso mediante credenciales', supportsImages: true, kind: 'chat', contactOnly: true, capabilities: ['Gemini para texto, imágenes y análisis', '400 GB de almacenamiento', 'Análisis y resumen de documentos', 'Escritura, traducción y programación', 'Herramientas avanzadas incluidas en el paquete'] },
   { id: 'image', name: 'Nano Banana 2', badge: 'Solicitar acceso', provider: 'Google', priceLabel: '$50.000 COP · 1 mes · ilimitado', description: 'Generación y edición ilimitada de imágenes durante un mes, disponible mediante credenciales solicitadas por WhatsApp.', theoreticalLimit: 'Generaciones ilimitadas', serviceLimit: 'Acceso mediante credenciales', supportsImages: true, kind: 'media', contactOnly: true, capabilities: ['Crear imágenes desde una descripción', 'Editar imágenes existentes', 'Variaciones visuales y conceptos', 'Composición con texto', 'Generaciones ilimitadas durante el mes'] },
@@ -111,10 +114,20 @@ async function answerWithProvider(modelId, messages, res) {
   if (modelId === 'qwen') {
     if (messages.some(message => message.image)) throw new Error('Uncensored es solo texto. Para analizar imágenes, solicita las credenciales del servicio correspondiente por WhatsApp.');
     const controller = new AbortController(); res.on('close', () => controller.abort());
-    const upstream = await fetch(`${OLLAMA_URL}/api/chat`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: QWEN_MODEL, messages: [{ role: 'system', content: SYSTEM_MESSAGE }, ...messages.map(({ role, content }) => ({ role, content }))], stream: true, think: false, keep_alive: '10m', options: { num_ctx: 4096, num_predict: 1024 } }), signal: controller.signal });
-    if (!upstream.ok || !upstream.body) throw new Error(`Ollama respondió ${upstream.status}`);
     res.writeHead(200, { 'content-type': 'application/x-ndjson; charset=utf-8', 'cache-control': 'no-cache, no-transform' });
-    for await (const chunk of upstream.body) res.write(chunk);
+    const promptMessages = messages.map(({ role, content }) => ({ role, content })); let generated = ''; let finalReason = 'stop'; let completedParts = 0;
+    for (let part = 1; part <= OLLAMA_MAX_PARTS; part += 1) {
+      const continuation = part === 1 ? promptMessages : [...promptMessages, { role: 'assistant', content: generated }, { role: 'user', content: 'Continúa exactamente desde donde terminó la respuesta anterior. No repitas la introducción ni el contenido ya escrito. Conserva el formato y concluye completamente la respuesta.' }];
+      const upstream = await fetch(`${OLLAMA_URL}/api/chat`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: QWEN_MODEL, messages: [{ role: 'system', content: SYSTEM_MESSAGE }, ...continuation], stream: true, think: false, keep_alive: '10m', options: { num_ctx: OLLAMA_CONTEXT, num_predict: OLLAMA_PART_TOKENS } }), signal: controller.signal });
+      if (!upstream.ok || !upstream.body) throw new Error(`Ollama respondió ${upstream.status}`);
+      if (part > 1) { const divider = `\n\n---\n\n**Continuación ${part}**\n\n`; generated += divider; res.write(`${JSON.stringify({ message: { content: divider }, part, continuation: true })}\n`); }
+      const decoder = new TextDecoder(); let pending = ''; finalReason = 'stop'; completedParts = part;
+      const handleLine = line => { if (!line.trim()) return; const item = JSON.parse(line); const content = item.message?.content || ''; if (content) { generated += content; res.write(`${JSON.stringify({ message: { content }, part })}\n`); } if (item.done) finalReason = item.done_reason || 'stop'; };
+      for await (const chunk of upstream.body) { pending += decoder.decode(chunk, { stream: true }); const lines = pending.split('\n'); pending = lines.pop(); for (const line of lines) handleLine(line); }
+      pending += decoder.decode(); if (pending.trim()) handleLine(pending);
+      if (finalReason !== 'length') break;
+    }
+    res.write(`${JSON.stringify({ done: true, done_reason: finalReason, parts: completedParts, truncated: finalReason === 'length' })}\n`);
     return res.end();
   }
   if (modelId === 'gpt') {

@@ -19,6 +19,7 @@ El panel administrativo también permite registrar clientes atendidos por WhatsA
 - La app escucha en `127.0.0.1:4173`; Ollama permanece en `127.0.0.1:11434` y Cloudflare entrega HTTPS.
 - Las sesiones firmadas duran siete días.
 - Solo hay una generación local simultánea para proteger el PC.
+- Las respuestas de Uncensored usan 12K de contexto y hasta cuatro bloques de 2K tokens. Si un bloque termina por longitud, el servidor continúa automáticamente sin repetir la introducción.
 
 ## Servicios
 
