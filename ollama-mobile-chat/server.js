@@ -18,6 +18,7 @@ const OLLAMA_PART_TOKENS = Math.min(4096, Math.max(32, Number.parseInt(process.e
 const OLLAMA_MAX_PARTS = Math.min(8, Math.max(1, Number.parseInt(process.env.OLLAMA_MAX_PARTS, 10) || 4));
 const UNCENSORED_MONTHLY_PRICE = 10000;
 const COOKIE_NAME = 'aurora_session';
+const ADMIN_COOKIE_NAME = 'aurora_admin_session';
 const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
 const SYSTEM_MESSAGE = 'Responde de forma clara, útil y bien estructurada. Usa Markdown. Para matemáticas usa LaTeX: \\( ... \\) en línea y \\[ ... \\] en bloque. Termina siempre la respuesta.';
 
@@ -59,8 +60,10 @@ function sign(payload) { const data = Buffer.from(JSON.stringify(payload)).toStr
 function verifySigned(token) { try { const [data, signature] = String(token || '').split('.'); const expected = crypto.createHmac('sha256', SESSION_SECRET).update(data).digest('base64url'); if (!safeEqual(signature, expected)) return null; const payload = JSON.parse(Buffer.from(data, 'base64url').toString('utf8')); return payload.exp > Date.now() ? payload : null; } catch { return null; } }
 function parseCookies(req) { return Object.fromEntries(String(req.headers.cookie || '').split(';').map(v => v.trim()).filter(Boolean).map(v => { const at = v.indexOf('='); return [decodeURIComponent(v.slice(0, at)), decodeURIComponent(v.slice(at + 1))]; })); }
 function session(req) { return verifySigned(parseCookies(req)[COOKIE_NAME]); }
+function adminSession(req) { const cookies = parseCookies(req); const dedicated = verifySigned(cookies[ADMIN_COOKIE_NAME]); if (dedicated?.role === 'admin') return dedicated; const legacy = verifySigned(cookies[COOKIE_NAME]); return legacy?.role === 'admin' ? legacy : null; }
 function cookieSecurity(req) { return req.headers['x-forwarded-proto'] === 'https' ? '; Secure' : ''; }
 function sessionCookie(req, payload) { const token = sign({ ...payload, exp: Date.now() + SESSION_TTL_SECONDS * 1000 }); return `${COOKIE_NAME}=${token}; HttpOnly${cookieSecurity(req)}; SameSite=Lax; Path=/; Max-Age=${SESSION_TTL_SECONDS}`; }
+function adminSessionCookie(req) { const token = sign({ sub: 'admin', role: 'admin', unlocked: true, exp: Date.now() + SESSION_TTL_SECONDS * 1000 }); return `${ADMIN_COOKIE_NAME}=${token}; HttpOnly${cookieSecurity(req)}; SameSite=Lax; Path=/; Max-Age=${SESSION_TTL_SECONDS}`; }
 function effectiveSubscription(user) {
   const subscription = { ...(user.subscription || { status: 'none', plan: null }) };
   if (subscription.status === 'active' && subscription.expiresAt && new Date(subscription.expiresAt).getTime() <= Date.now()) subscription.status = 'expired';
@@ -163,7 +166,7 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   if (req.method === 'GET' && url.pathname === '/api/status') {
     const auth = session(req); const user = auth?.role === 'user' ? getUser(req) : null; const ollama = await ollamaOnline();
-    return json(res, 200, { authenticated: Boolean(user), admin: auth?.role === 'admin', unlocked: Boolean(auth?.unlocked), user: user ? publicUser(user) : null, ollama, models: MODELS, providers: { qwen: ollama, gpt: false, gemini: false, image: false, video: false } });
+    return json(res, 200, { authenticated: Boolean(user), admin: Boolean(adminSession(req)), unlocked: Boolean(auth?.unlocked), user: user ? publicUser(user) : null, ollama, models: MODELS, providers: { qwen: ollama, gpt: false, gemini: false, image: false, video: false } });
   }
   if (req.method === 'POST' && url.pathname === '/api/auth/register') {
     if (rateLimited(req, 'register')) return json(res, 429, { error: 'Demasiados intentos. Espera unos minutos.' });
@@ -212,20 +215,20 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'POST' && url.pathname === '/api/admin/login') {
     if (rateLimited(req, 'admin')) return json(res, 429, { error: 'Demasiados intentos.' }); const body = await readJson(req, 8 * 1024);
     if (!safeEqual(normalizeAdminCode(body.code), ADMIN_CODE)) return json(res, 401, { error: 'Clave de administrador incorrecta. Escribe únicamente los cuatro números.' });
-    return json(res, 200, { ok: true }, { 'set-cookie': sessionCookie(req, { sub: 'admin', role: 'admin', unlocked: true }) });
+    return json(res, 200, { ok: true }, { 'set-cookie': adminSessionCookie(req) });
   }
   if (req.method === 'GET' && url.pathname === '/api/admin/users') {
-    if (session(req)?.role !== 'admin') return json(res, 401, { error: 'Acceso de administrador requerido.' }); const db = readDb();
+    if (!adminSession(req)) return json(res, 401, { error: 'Acceso de administrador requerido.' }); const db = readDb();
     return json(res, 200, { users: db.users.map(user => { const payment = effectiveSubscription(user); return { ...publicUser(user), payment: { ...payment, receiptUrl: payment.receiptFile ? `/api/admin/receipt/${encodeURIComponent(payment.receiptFile)}` : null } }; }), customers: db.customers });
   }
   if (req.method === 'POST' && url.pathname === '/api/admin/users/delete') {
-    if (session(req)?.role !== 'admin') return json(res, 401, { error: 'Acceso de administrador requerido.' });
+    if (!adminSession(req)) return json(res, 401, { error: 'Acceso de administrador requerido.' });
     const body = await readJson(req, 8 * 1024); const db = readDb(); const index = db.users.findIndex(item => item.id === body.userId);
     if (index < 0) return json(res, 404, { error: 'Usuario no encontrado.' });
     const [removed] = db.users.splice(index, 1); writeDb(db); deleteReceipt(removed.subscription?.receiptFile); return json(res, 200, { ok: true });
   }
   if (req.method === 'GET' && url.pathname.startsWith('/api/admin/receipt/')) {
-    if (session(req)?.role !== 'admin') return json(res, 401, { error: 'Acceso de administrador requerido.' });
+    if (!adminSession(req)) return json(res, 401, { error: 'Acceso de administrador requerido.' });
     const filename = decodeURIComponent(url.pathname.slice('/api/admin/receipt/'.length));
     if (!/^[a-f0-9-]+-\d+-[a-f0-9]+\.(png|jpg|webp)$/.test(filename)) return json(res, 400, { error: 'Comprobante inválido.' });
     const receiptPath = path.join(RECEIPTS_DIR, filename); if (!fs.existsSync(receiptPath)) return json(res, 404, { error: 'Comprobante no encontrado.' });
@@ -233,7 +236,7 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, { 'content-type': contentType, 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff' }); return fs.createReadStream(receiptPath).pipe(res);
   }
   if (req.method === 'POST' && url.pathname === '/api/admin/customers') {
-    if (session(req)?.role !== 'admin') return json(res, 401, { error: 'Acceso de administrador requerido.' });
+    if (!adminSession(req)) return json(res, 401, { error: 'Acceso de administrador requerido.' });
     try {
       const body = await readJson(req, 32 * 1024); const name = String(body.name || '').trim().slice(0, 100); const whatsapp = normalizeWhatsapp(body.whatsapp); const amount = String(body.amount || '').replace(/\D/g, '').slice(0, 12); const service = String(body.service || 'gpt_or_gemini').slice(0, 40); const startedAt = colombiaDate(body.startedAt); const durationMonths = Math.min(36, Math.max(0, Number.parseInt(body.durationMonths, 10) || 0));
       if (name.length < 2 || whatsapp.length < 10 || !amount) return json(res, 400, { error: 'Completa nombre, WhatsApp, valor y fecha.' });
@@ -243,17 +246,17 @@ const server = http.createServer(async (req, res) => {
     } catch (error) { return json(res, 400, { error: error.message || 'No se pudo agregar el cliente.' }); }
   }
   if (req.method === 'POST' && url.pathname === '/api/admin/customers/duration') {
-    if (session(req)?.role !== 'admin') return json(res, 401, { error: 'Acceso de administrador requerido.' }); const body = await readJson(req, 8 * 1024); const months = Math.min(36, Math.max(1, Number.parseInt(body.durationMonths, 10) || 1)); const db = readDb(); const customer = db.customers.find(item => item.id === body.customerId);
+    if (!adminSession(req)) return json(res, 401, { error: 'Acceso de administrador requerido.' }); const body = await readJson(req, 8 * 1024); const months = Math.min(36, Math.max(1, Number.parseInt(body.durationMonths, 10) || 1)); const db = readDb(); const customer = db.customers.find(item => item.id === body.customerId);
     if (!customer) return json(res, 404, { error: 'Cliente no encontrado.' }); customer.durationMonths = months; customer.expiresAt = addCalendarMonths(customer.startedAt, months); customer.status = 'active'; writeDb(db); return json(res, 200, { customer });
   }
   if (req.method === 'POST' && url.pathname === '/api/admin/customers/delete') {
-    if (session(req)?.role !== 'admin') return json(res, 401, { error: 'Acceso de administrador requerido.' });
+    if (!adminSession(req)) return json(res, 401, { error: 'Acceso de administrador requerido.' });
     const body = await readJson(req, 8 * 1024); const db = readDb(); const index = db.customers.findIndex(item => item.id === body.customerId);
     if (index < 0) return json(res, 404, { error: 'Cliente no encontrado.' });
     db.customers.splice(index, 1); writeDb(db); return json(res, 200, { ok: true });
   }
   if (req.method === 'POST' && (url.pathname === '/api/admin/approve' || url.pathname === '/api/admin/reject')) {
-    if (session(req)?.role !== 'admin') return json(res, 401, { error: 'Acceso de administrador requerido.' }); const body = await readJson(req, 8 * 1024); const db = readDb(); const user = db.users.find(item => item.id === body.userId);
+    if (!adminSession(req)) return json(res, 401, { error: 'Acceso de administrador requerido.' }); const body = await readJson(req, 8 * 1024); const db = readDb(); const user = db.users.find(item => item.id === body.userId);
     if (!user) return json(res, 404, { error: 'Usuario no encontrado.' });
     if (url.pathname.endsWith('reject')) { user.subscription = { ...user.subscription, status: 'rejected', reviewedAt: new Date().toISOString() }; delete user.tokenHash; delete user.tokenCipher; writeDb(db); return json(res, 200, { ok: true }); }
     const requestedDays = Number.parseInt(user.subscription?.durationDaysRequested, 10) || 180;
@@ -264,7 +267,7 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, { ok: true, token, user: publicUser(user) });
   }
   if (req.method === 'POST' && url.pathname === '/api/admin/extend') {
-    if (session(req)?.role !== 'admin') return json(res, 401, { error: 'Acceso de administrador requerido.' });
+    if (!adminSession(req)) return json(res, 401, { error: 'Acceso de administrador requerido.' });
     const body = await readJson(req, 8 * 1024); const days = Math.min(3650, Math.max(1, Number.parseInt(body.durationDays, 10) || 30)); const db = readDb(); const user = db.users.find(item => item.id === body.userId);
     if (!user || !user.subscription?.activatedAt) return json(res, 404, { error: 'Suscripción no encontrada.' });
     const currentEnd = user.subscription.expiresAt ? new Date(user.subscription.expiresAt).getTime() : Date.now(); const base = Math.max(Date.now(), currentEnd);

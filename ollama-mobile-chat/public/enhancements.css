@@ -35,6 +35,21 @@
 .messages{overflow-anchor:none}
 .message.assistant:last-child .bubble{min-height:56px}
 #print-export{display:none}
+#print-export.pdf-export{display:block;position:relative;width:794px;height:auto;min-height:1px;padding:48px;background:#fff;color:#17131a;font:15px/1.55 Arial,Helvetica,sans-serif;visibility:visible;pointer-events:none}
+#print-export.pdf-export>header{padding-bottom:15px;border-bottom:2px solid #25202a}
+#print-export.pdf-export>header span{color:#596600;font-size:12px;font-weight:800;letter-spacing:.15em}
+#print-export.pdf-export>header h1{margin:7px 0 4px;font-size:31px;letter-spacing:-.035em}
+#print-export.pdf-export>header p{margin:0;color:#666}
+#print-export.pdf-export main{display:block}
+#print-export.pdf-export .print-message{margin:22px 0;padding:0 0 19px;border-bottom:1px solid #ddd;overflow-wrap:anywhere}
+#print-export.pdf-export .print-message h2{margin:0 0 8px;color:#596600;font-size:13px;text-transform:uppercase;letter-spacing:.1em}
+#print-export.pdf-export .print-message p{margin:0 0 10px}
+#print-export.pdf-export .print-message img{display:block;max-width:100%;max-height:420px;margin:8px 0 12px;border-radius:8px;object-fit:contain}
+#print-export.pdf-export .print-message pre{white-space:pre-wrap;word-break:break-word;padding:11px;border:1px solid #ccc;border-radius:7px;background:#f6f6f6}
+#print-export.pdf-export .print-message .code-head button{display:none}
+#print-export.pdf-export .print-message blockquote{margin:10px 0;padding-left:10px;border-left:3px solid #95a600;color:#444}
+#print-export.pdf-export .print-message mjx-container[display="true"]{margin:12px 0!important;overflow:visible!important}
+#print-export.pdf-export>footer{margin-top:24px;padding-top:9px;border-top:1px solid #bbb;color:#777;font-size:11px}
 @media(max-width:620px){.model-card-actions{grid-template-columns:1fr}.model-dialog h2{font-size:1.8rem}}
 @media print{
   @page{size:A4;margin:17mm 16mm 18mm}
