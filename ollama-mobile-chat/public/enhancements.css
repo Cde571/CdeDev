@@ -5,6 +5,10 @@
 .button:disabled{cursor:not-allowed;opacity:.6}
 .model-dialog{width:min(570px,calc(100% - 28px))}
 .model-dialog .model-icon{margin-bottom:22px}
+.model-icon img{display:block;width:27px;height:27px;object-fit:contain}
+.model-card:nth-child(2) .model-icon{background:#f7f7f5;border-color:#f7f7f5}
+.model-card:nth-child(3) .model-icon{background:#eef2ff;border-color:#9eb8ff}
+.model-card:nth-child(4) .model-icon,.model-card:nth-child(5) .model-icon{background:#17121d}
 .model-dialog h2{margin:4px 0 10px;font-size:2.15rem;letter-spacing:-.045em}
 .model-price,.detail-price{display:block;color:var(--lime);font-size:.92rem;font-weight:850}
 .model-card .model-price{margin-top:-2px}

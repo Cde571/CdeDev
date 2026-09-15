@@ -25,7 +25,7 @@ El panel administrativo también permite registrar clientes atendidos por WhatsA
 
 - Uncensored/Ollama: único modelo que se activa y usa dentro del portal.
 - Uncensored cuesta `$10.000 COP` por mes. El cliente elige entre 1 y 12 meses (6 meses siguen costando `$60.000 COP`) y la aprobación propone automáticamente la duración solicitada.
-- GPT y Gemini cuestan `$40.000 COP` por un mes y se solicitan por WhatsApp. Gemini incluye 400 GB de almacenamiento y requiere consultar las condiciones de acceso antes de pagar.
+- ChatGPT cuesta `$40.000 COP` por un mes. Gemini cuesta `$40.000 COP` por 12 meses, incluye 400 GB de almacenamiento y requiere consultar las condiciones de acceso antes de pagar. Ambos se solicitan por WhatsApp.
 - Imagen y video cuestan `$50.000 COP` por un mes con generaciones ilimitadas y se solicitan por WhatsApp.
 - WhatsApp prepara el mensaje, pero el visitante debe confirmar su envío.
 
