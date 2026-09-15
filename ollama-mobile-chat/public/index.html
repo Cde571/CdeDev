@@ -9,7 +9,7 @@
   <title>Aurora AI</title>
   <link rel="stylesheet" href="/styles.css?v=8">
   <link rel="stylesheet" href="/admin.css?v=16">
-  <link rel="stylesheet" href="/enhancements.css?v=16">
+  <link rel="stylesheet" href="/enhancements.css?v=18">
 </head>
 <body>
   <div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
@@ -55,8 +55,8 @@
       </section>
       <section id="dashboard-models"><div class="section-heading compact"><div><h2>Todos los servicios</h2><p>Tu plan actual permanece visible. También puedes consultar los demás servicios por WhatsApp.</p></div></div><div class="model-grid" id="dashboard-model-grid"></div></section>
       <section id="payment-panel" class="panel payment-panel" hidden>
-        <div><p class="kicker"><span></span> ACTIVACIÓN MANUAL</p><h2>Uncensored · $60.000</h2><p>El pago incluye <strong>6 meses de acceso</strong>. Envía el valor por Nequi a:</p><button class="nequi-number" id="copy-nequi" type="button">312 545 2189 <span>Copiar</span></button><button class="button whatsapp payment-whatsapp" id="payment-whatsapp" type="button">Hablar con el administrador por WhatsApp</button><p class="fine-print">El token solo se genera cuando el administrador verifica la foto del comprobante.</p></div>
-        <form id="payment-form" class="stack-form"><input type="hidden" id="payment-plan"><label>Nombre de quien paga<input id="payer-name" required maxlength="100"></label><label>Tu número de WhatsApp<input id="payer-whatsapp" type="tel" required inputmode="tel" minlength="10" maxlength="20" placeholder="Ej. 312 555 1234"></label><label>Valor del plan (COP)<input id="payment-amount" required inputmode="numeric" value="60000" readonly></label><label>Referencia del pago<input id="payment-reference" required minlength="4" maxlength="80"></label><label class="receipt-field">Foto del comprobante<input id="payment-receipt" type="file" accept="image/png,image/jpeg,image/webp" required><span>PNG, JPG o WEBP · máximo 4 MB</span></label><div id="payment-receipt-preview" class="receipt-preview" hidden></div><button class="button primary" type="submit">Enviar para revisión</button><p class="form-message" id="payment-message"></p></form>
+        <div><p class="kicker"><span></span> ACTIVACIÓN MANUAL</p><h2 id="payment-title">Uncensored · $60.000</h2><p id="payment-summary">Has elegido <strong>6 meses de acceso</strong>. Envía el valor exacto por Nequi a:</p><button class="nequi-number" id="copy-nequi" type="button">312 545 2189 <span>Copiar</span></button><button class="button whatsapp payment-whatsapp" id="payment-whatsapp" type="button">Hablar con el administrador por WhatsApp</button><p class="fine-print">El token solo se genera cuando el administrador verifica la foto del comprobante.</p></div>
+        <form id="payment-form" class="stack-form"><input type="hidden" id="payment-plan"><label>Tiempo de acceso<select id="payment-months" required><option value="1">1 mes</option><option value="2">2 meses</option><option value="3">3 meses</option><option value="4">4 meses</option><option value="5">5 meses</option><option value="6" selected>6 meses</option><option value="7">7 meses</option><option value="8">8 meses</option><option value="9">9 meses</option><option value="10">10 meses</option><option value="11">11 meses</option><option value="12">12 meses</option></select></label><label>Valor del plan (COP)<input id="payment-amount" required inputmode="numeric" value="60000" readonly></label><label>Nombre de quien paga<input id="payer-name" required maxlength="100"></label><label>Tu número de WhatsApp<input id="payer-whatsapp" type="tel" required inputmode="tel" minlength="10" maxlength="20" placeholder="Ej. 312 555 1234"></label><label>Referencia del pago<input id="payment-reference" required minlength="4" maxlength="80"></label><label class="receipt-field">Foto del comprobante<input id="payment-receipt" type="file" accept="image/png,image/jpeg,image/webp" required><span>PNG, JPG o WEBP · máximo 4 MB</span></label><div id="payment-receipt-preview" class="receipt-preview" hidden></div><button class="button primary" id="payment-submit" type="submit">Enviar para revisión</button><p class="form-message" id="payment-message"></p></form>
       </section>
     </section>
 
@@ -86,6 +86,6 @@
 
   <script>window.MathJax={tex:{inlineMath:[['\\(','\\)'],['$','$']],displayMath:[['\\[','\\]'],['$$','$$']],processEscapes:true},options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}};</script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
-  <script src="/app.js?v=17" defer></script>
+  <script src="/app.js?v=18" defer></script>
 </body>
 </html>

@@ -6,7 +6,7 @@ Portal web con cuentas, pagos manuales, tokens personales y chat efímero. Uncen
 
 1. En Windows, ejecuta `Iniciar-Qwen-Movil.cmd`. El lanzador detecta Node.js y Ollama, crea la clave administrativa si falta y descarga automáticamente el cliente oficial de Cloudflare Tunnel.
 2. El archivo `ENLACE AURORA AI.txt` se actualizará con el nuevo enlace público.
-3. Cada cliente crea un usuario y contraseña, selecciona Uncensored y registra su pago por Nequi con número de WhatsApp, referencia y foto del comprobante. Para cualquier otro servicio, usa el botón de WhatsApp y solicita sus credenciales.
+3. Cada cliente crea un usuario y contraseña, selecciona Uncensored, elige de 1 a 12 meses y registra su pago por Nequi con número de WhatsApp, referencia y foto del comprobante. El precio se calcula automáticamente a `$10.000 COP` por mes. Para cualquier otro servicio, usa el botón de WhatsApp y solicita sus credenciales.
 4. Entra a **Administrar** con la clave local. Puedes aprobar comprobantes o dar acceso manual a cualquier cuenta registrada; en ambos casos se crea un token único.
 5. El cliente usa usuario, contraseña y token para entrar.
 
@@ -24,7 +24,7 @@ El panel administrativo también permite registrar clientes atendidos por WhatsA
 ## Servicios
 
 - Uncensored/Ollama: único modelo que se activa y usa dentro del portal.
-- Uncensored cuesta `$60.000 COP` por 6 meses; la aprobación propone 180 días por defecto.
+- Uncensored cuesta `$10.000 COP` por mes. El cliente elige entre 1 y 12 meses (6 meses siguen costando `$60.000 COP`) y la aprobación propone automáticamente la duración solicitada.
 - GPT y Gemini cuestan `$40.000 COP` por un mes y se solicitan por WhatsApp. Gemini incluye 400 GB de almacenamiento y requiere consultar las condiciones de acceso antes de pagar.
 - Imagen y video cuestan `$50.000 COP` por un mes con generaciones ilimitadas y se solicitan por WhatsApp.
 - WhatsApp prepara el mensaje, pero el visitante debe confirmar su envío.

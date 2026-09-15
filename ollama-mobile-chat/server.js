@@ -16,6 +16,7 @@ const QWEN_MODEL = process.env.OLLAMA_MODEL || 'srchmnmichael/qwen3.5-9B-uncenso
 const OLLAMA_CONTEXT = Math.min(32768, Math.max(4096, Number.parseInt(process.env.OLLAMA_CONTEXT, 10) || 12288));
 const OLLAMA_PART_TOKENS = Math.min(4096, Math.max(32, Number.parseInt(process.env.OLLAMA_PART_TOKENS, 10) || 2048));
 const OLLAMA_MAX_PARTS = Math.min(8, Math.max(1, Number.parseInt(process.env.OLLAMA_MAX_PARTS, 10) || 4));
+const UNCENSORED_MONTHLY_PRICE = 10000;
 const COOKIE_NAME = 'aurora_session';
 const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
 const SYSTEM_MESSAGE = 'Responde de forma clara, útil y bien estructurada. Usa Markdown. Para matemáticas usa LaTeX: \\( ... \\) en línea y \\[ ... \\] en bloque. Termina siempre la respuesta.';
@@ -30,7 +31,7 @@ const loginAttempts = new Map();
 let activeGeneration = false;
 
 const MODELS = [
-  { id: 'qwen', name: 'Uncensored', badge: 'Disponible', provider: 'Privado', priceLabel: '$60.000 COP · 6 meses', priceCop: 60000, durationDays: 180, description: 'Asistente de texto alojado en este equipo, con respuestas directas y gran libertad creativa.', theoreticalLimit: '262K de contexto (modelo)', serviceLimit: '12K de contexto · hasta 8K de salida en partes', supportsImages: false, kind: 'chat', contactOnly: false, capabilities: ['Conversación y lluvia de ideas', 'Respuestas largas con continuación automática', 'Redacción, resumen y traducción', 'Programación y explicación de código', 'Matemáticas con fórmulas LaTeX', 'Sesiones de texto efímeras'] },
+  { id: 'qwen', name: 'Uncensored', badge: 'Disponible', provider: 'Privado', priceLabel: 'Desde $10.000 COP al mes · elige 1 a 12 meses', monthlyPriceCop: UNCENSORED_MONTHLY_PRICE, defaultMonths: 6, description: 'Asistente de texto alojado en este equipo, con respuestas directas y gran libertad creativa.', theoreticalLimit: '262K de contexto (modelo)', serviceLimit: '12K de contexto · hasta 8K de salida en partes', supportsImages: false, kind: 'chat', contactOnly: false, capabilities: ['Conversación y lluvia de ideas', 'Respuestas largas con continuación automática', 'Duración seleccionable de 1 a 12 meses', 'Redacción, resumen y traducción', 'Programación y explicación de código', 'Matemáticas con fórmulas LaTeX', 'Sesiones de texto efímeras'] },
   { id: 'gpt', name: 'GPT-6 Astra', badge: 'Solicitar acceso', provider: 'OpenAI', priceLabel: '$40.000 COP · 1 mes', description: 'Razonamiento avanzado y visión. Solicita directamente tus credenciales por WhatsApp.', theoreticalLimit: '1,05M de contexto · 128K de salida', serviceLimit: 'Acceso mediante credenciales', supportsImages: true, kind: 'chat', contactOnly: true, capabilities: ['Razonamiento complejo y análisis', 'Comprensión de imágenes', 'Escritura profesional y código', 'Respuestas estructuradas y matemáticas', 'Flujos multimodales'] },
   { id: 'gemini', name: 'Gemini 3.8 Flash', badge: 'Solicitar acceso', provider: 'Google', priceLabel: '$40.000 COP · 1 mes', requirements: 'Este acceso requiere cumplir unas condiciones. Solicita los requisitos por WhatsApp antes de pagar.', description: 'Paquete de inteligencia artificial con 400 GB de almacenamiento y herramientas avanzadas. Acceso sujeto a requisitos.', theoreticalLimit: '400 GB de almacenamiento incluidos', serviceLimit: 'Acceso mediante credenciales', supportsImages: true, kind: 'chat', contactOnly: true, capabilities: ['Gemini para texto, imágenes y análisis', '400 GB de almacenamiento', 'Análisis y resumen de documentos', 'Escritura, traducción y programación', 'Herramientas avanzadas incluidas en el paquete'] },
   { id: 'image', name: 'Nano Banana 2', badge: 'Solicitar acceso', provider: 'Google', priceLabel: '$50.000 COP · 1 mes · ilimitado', description: 'Generación y edición ilimitada de imágenes durante un mes, disponible mediante credenciales solicitadas por WhatsApp.', theoreticalLimit: 'Generaciones ilimitadas', serviceLimit: 'Acceso mediante credenciales', supportsImages: true, kind: 'media', contactOnly: true, capabilities: ['Crear imágenes desde una descripción', 'Editar imágenes existentes', 'Variaciones visuales y conceptos', 'Composición con texto', 'Generaciones ilimitadas durante el mes'] },
@@ -179,10 +180,11 @@ const server = http.createServer(async (req, res) => {
     const user = getUser(req); if (!user) return json(res, 401, { error: 'Inicia sesión.' });
     try {
       const body = await readJson(req, 6 * 1024 * 1024); if (body.plan !== 'qwen') return json(res, 400, { error: 'Solo Uncensored se activa dentro de la web. Para los demás accesos, contacta por WhatsApp.' });
-      const payerName = String(body.payerName || '').trim().slice(0, 100); const reference = String(body.reference || '').trim().slice(0, 80); const amount = '60000'; const whatsapp = normalizeWhatsapp(body.whatsapp);
+      const durationMonths = Number.parseInt(body.durationMonths, 10); if (!Number.isInteger(durationMonths) || durationMonths < 1 || durationMonths > 12) return json(res, 400, { error: 'Selecciona una duración entre 1 y 12 meses.' });
+      const payerName = String(body.payerName || '').trim().slice(0, 100); const reference = String(body.reference || '').trim().slice(0, 80); const amount = String(durationMonths * UNCENSORED_MONTHLY_PRICE); const whatsapp = normalizeWhatsapp(body.whatsapp);
       if (payerName.length < 2 || reference.length < 4 || !amount || whatsapp.length < 10) return json(res, 400, { error: 'Completa el nombre, valor, referencia y número de WhatsApp.' });
       const receiptFile = saveReceipt(body.receipt, user.id);
-      const db = readDb(); const target = db.users.find(item => item.id === user.id); target.subscription = { status: 'pending', plan: body.plan, payerName, reference, amount, whatsapp, receiptFile, claimedAt: new Date().toISOString() }; delete target.tokenHash; delete target.tokenCipher; writeDb(db);
+      const db = readDb(); const target = db.users.find(item => item.id === user.id); target.subscription = { status: 'pending', plan: body.plan, payerName, reference, amount, durationMonths, durationDaysRequested: durationMonths * 30, whatsapp, receiptFile, claimedAt: new Date().toISOString() }; delete target.tokenHash; delete target.tokenCipher; writeDb(db);
       return json(res, 200, { user: publicUser(target) });
     } catch (error) { return json(res, 400, { error: error.message || 'No se pudo registrar el comprobante.' }); }
   }
@@ -231,7 +233,8 @@ const server = http.createServer(async (req, res) => {
     if (session(req)?.role !== 'admin') return json(res, 401, { error: 'Acceso de administrador requerido.' }); const body = await readJson(req, 8 * 1024); const db = readDb(); const user = db.users.find(item => item.id === body.userId);
     if (!user) return json(res, 404, { error: 'Usuario no encontrado.' });
     if (url.pathname.endsWith('reject')) { user.subscription = { ...user.subscription, status: 'rejected', reviewedAt: new Date().toISOString() }; delete user.tokenHash; delete user.tokenCipher; writeDb(db); return json(res, 200, { ok: true }); }
-    const durationDays = Math.min(3650, Math.max(1, Number.parseInt(body.durationDays, 10) || 180));
+    const requestedDays = Number.parseInt(user.subscription?.durationDaysRequested, 10) || 180;
+    const durationDays = Math.min(3650, Math.max(1, Number.parseInt(body.durationDays, 10) || requestedDays));
     const activatedAt = new Date();
     const expiresAt = new Date(activatedAt.getTime() + durationDays * 86400000);
     const token = `aur_${crypto.randomBytes(24).toString('base64url')}`; user.tokenHash = crypto.createHash('sha256').update(token).digest('hex'); user.tokenCipher = encryptToken(token); user.subscription = { ...user.subscription, plan: 'qwen', status: 'active', durationDays, activatedAt: activatedAt.toISOString(), expiresAt: expiresAt.toISOString() }; writeDb(db);
