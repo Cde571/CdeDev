@@ -18,6 +18,8 @@
 .manual-customer h3{margin:10px 0 4px}.manual-customer p{margin:0;color:var(--muted)}.manual-customer a{display:inline-block;margin-top:8px;color:var(--lime)}
 .customer-duration{display:flex;align-items:end;gap:8px}.customer-duration input{width:72px}
 .button.danger{border-color:#8e3948;background:#4a2029;color:#ffd5dc}.button.danger:hover{border-color:#d85a70;background:#642b36}
+.admin-row:has(.status-pill.pending){border-color:#d6e94a;box-shadow:0 0 0 1px #e7ff3f22,0 14px 38px #05030738}
+#admin-list>.section-heading+.admin-subtitle{margin-top:12px}
 @media(max-width:1050px){.admin-row{grid-template-columns:1fr}.admin-actions{justify-content:flex-start}}
 @media(max-width:1050px){.manual-entry,.manual-customer{grid-template-columns:1fr}}
 @media(max-width:620px){.subscription-dates{grid-template-columns:1fr}.duration-field{grid-template-columns:auto 68px auto}.admin-row,.manual-customer{padding:16px}.manual-customer-form{grid-template-columns:1fr}.manual-customer-form>*{grid-column:1/-1}}
