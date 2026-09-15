@@ -68,7 +68,7 @@
 
     <section id="admin-view" class="view wrap" hidden>
       <div class="dashboard-head"><div><p class="kicker"><span></span> CONTROL DE ACCESO</p><h1>Administración</h1><p class="muted">Verifica pagos y genera tokens personales.</p></div><button class="button ghost" data-home>Volver</button></div>
-      <form id="admin-login-form" class="panel narrow stack-form"><label>Clave de administrador<input id="admin-code" type="password" required></label><button class="button primary" type="submit">Entrar</button><p class="form-message" id="admin-message"></p></form>
+      <form id="admin-login-form" class="panel narrow stack-form"><label>Clave de administrador<input id="admin-code" type="password" inputmode="numeric" autocomplete="current-password" maxlength="8" placeholder="4 números" required></label><button class="button primary" type="submit">Entrar</button><p class="form-message" id="admin-message"></p></form>
       <div id="admin-list" hidden></div>
     </section>
   </main>
@@ -86,6 +86,6 @@
 
   <script>window.MathJax={tex:{inlineMath:[['\\(','\\)'],['$','$']],displayMath:[['\\[','\\]'],['$$','$$']],processEscapes:true},options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}};</script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
-  <script src="/app.js?v=19" defer></script>
+  <script src="/app.js?v=20" defer></script>
 </body>
 </html>

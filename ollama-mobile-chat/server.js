@@ -52,6 +52,7 @@ async function readJson(req, maxBytes = 8 * 1024 * 1024) {
 }
 
 function normalizeUsername(value) { return String(value || '').trim().toLowerCase().replace(/\s+/g, ''); }
+function normalizeAdminCode(value) { const code = String(value || '').trim(); return /^\d+$/.test(ADMIN_CODE) ? code.replace(/\D/g, '') : code; }
 function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) { return { salt, hash: crypto.scryptSync(String(password), salt, 64).toString('hex') }; }
 function safeEqual(a, b) { const left = Buffer.from(String(a)); const right = Buffer.from(String(b)); return left.length === right.length && crypto.timingSafeEqual(left, right); }
 function sign(payload) { const data = Buffer.from(JSON.stringify(payload)).toString('base64url'); const signature = crypto.createHmac('sha256', SESSION_SECRET).update(data).digest('base64url'); return `${data}.${signature}`; }
@@ -200,7 +201,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method === 'POST' && url.pathname === '/api/admin/login') {
     if (rateLimited(req, 'admin')) return json(res, 429, { error: 'Demasiados intentos.' }); const body = await readJson(req, 8 * 1024);
-    if (!safeEqual(body.code, ADMIN_CODE)) return json(res, 401, { error: 'Clave de administrador incorrecta.' });
+    if (!safeEqual(normalizeAdminCode(body.code), ADMIN_CODE)) return json(res, 401, { error: 'Clave de administrador incorrecta. Escribe únicamente los cuatro números.' });
     return json(res, 200, { ok: true }, { 'set-cookie': sessionCookie(req, { sub: 'admin', role: 'admin', unlocked: true }) });
   }
   if (req.method === 'GET' && url.pathname === '/api/admin/users') {

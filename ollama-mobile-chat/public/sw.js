@@ -1,5 +1,5 @@
-const CACHE='aurora-ai-v19';
-const SHELL=['/','/styles.css?v=8','/admin.css?v=16','/enhancements.css?v=19','/app.js?v=19','/manifest.webmanifest','/assets/aurora-ai-hero.png','/assets/models/uncensored.svg','/assets/models/chatgpt.svg','/assets/models/gemini.svg','/assets/models/image.svg','/assets/models/video.svg'];
+const CACHE='aurora-ai-v20';
+const SHELL=['/','/styles.css?v=8','/admin.css?v=16','/enhancements.css?v=19','/app.js?v=20','/manifest.webmanifest','/assets/aurora-ai-hero.png','/assets/models/uncensored.svg','/assets/models/chatgpt.svg','/assets/models/gemini.svg','/assets/models/image.svg','/assets/models/video.svg'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{if(event.request.method!=='GET'||new URL(event.request.url).pathname.startsWith('/api/'))return;event.respondWith(fetch(event.request).then(response=>{const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy));return response}).catch(()=>caches.match(event.request)))});
