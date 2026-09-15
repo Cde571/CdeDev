@@ -1,0 +1,10 @@
+.status-pill.expired,.status-pill.rejected{color:#ffc0c8;background:#4a2029}
+.subscription-dates{display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:8px;margin-top:12px}
+.subscription-dates span{padding:9px 10px;border:1px solid var(--line-soft);border-radius:10px;color:#d7cddd;font-size:.78rem}
+.subscription-dates b{display:block;margin-bottom:3px;color:var(--muted);font-size:.68rem;font-weight:650;text-transform:uppercase;letter-spacing:.08em}
+.duration-field{display:grid;grid-template-columns:auto 68px auto;align-items:center;gap:7px;color:var(--muted);font-size:.78rem}
+.duration-field input{width:68px;padding:9px;border:1px solid var(--line);border-radius:9px;background:#15101a;color:var(--text)}
+.admin-row{grid-template-columns:minmax(190px,.8fr) minmax(390px,1.5fr) auto}
+.admin-actions{align-items:center;justify-content:flex-end;flex-wrap:wrap}
+@media(max-width:1050px){.admin-row{grid-template-columns:1fr}.admin-actions{justify-content:flex-start}}
+@media(max-width:620px){.subscription-dates{grid-template-columns:1fr}.duration-field{grid-template-columns:auto 68px auto}.admin-row{padding:16px}}

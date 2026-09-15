@@ -1,0 +1,9 @@
+{
+  "name": "Aurora AI",
+  "short_name": "Aurora",
+  "description": "Portal privado para conversar y crear con inteligencia artificial.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#100c14",
+  "theme_color": "#1c1522"
+}

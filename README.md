@@ -51,3 +51,10 @@ con Inno Setup 7 usando `installer.iss` y se genera en `installer\`.
   operaciones del sistema.
 
 Autor: [Cde57](https://github.com/Cde571)
+
+## Aurora AI
+
+El directorio `ollama-mobile-chat` contiene el portal móvil para usar un modelo
+local de Ollama mediante HTTPS, con cuentas, pagos manuales, comprobantes
+privados, tokens personales, administración de suscripciones y contacto por
+WhatsApp para servicios externos. Consulta su README para instalación y uso.

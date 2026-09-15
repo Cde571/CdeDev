@@ -1,0 +1,13 @@
+{
+  "name": "aurora-ai-portal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Portal de IA con cuentas, pagos, tokens y Ollama",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check public/app.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

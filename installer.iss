@@ -1,5 +1,5 @@
 #define MyAppName "CdeDev"
-#define MyAppVersion "1.2.0"
+#define MyAppVersion "1.2.1"
 #define MyAppPublisher "Cde57"
 #define MyAppURL "https://github.com/Cde571/CdeDev"
 #define MyAppExeName "CdeDev.exe"
@@ -46,5 +46,6 @@ Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "Ejecutar {#MyAppName}"; Flags: nowait postinstall skipifsilent
-
+; CdeDev lleva un manifiesto requireAdministrator. runascurrentuser evita que
+; Inno intente abrirlo con el token original sin elevar (CreateProcess error 740).
+Filename: "{app}\{#MyAppExeName}"; Description: "Ejecutar {#MyAppName}"; Flags: nowait postinstall skipifsilent runascurrentuser

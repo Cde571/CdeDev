@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#1c1522">
+  <meta name="description" content="Aurora AI: un portal privado para conversar, crear y explorar con inteligencia artificial.">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <title>Aurora AI</title>
+  <link rel="stylesheet" href="/styles.css?v=8">
+  <link rel="stylesheet" href="/admin.css?v=9">
+  <link rel="stylesheet" href="/enhancements.css?v=14">
+</head>
+<body>
+  <div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+  <header class="site-header">
+    <button class="brand-button" data-home aria-label="Ir al inicio"><span class="logo">A</span><span>Aurora AI<small>Creative intelligence</small></span></button>
+    <nav>
+      <button class="nav-link" data-scroll="models">Modelos</button>
+      <button class="nav-link" id="admin-link">Administrar</button>
+      <button class="button ghost" id="account-button">Entrar</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="landing-view">
+      <section class="hero wrap">
+        <div class="hero-copy">
+          <p class="kicker"><span></span> UN PORTAL. MÚLTIPLES INTELIGENCIAS.</p>
+          <h1>Convierte una idea en <em>algo extraordinario.</em></h1>
+          <p class="hero-lead">Texto, visión y creación en un espacio diseñado para trabajar con claridad. Elige tu modelo, activa tu acceso y empieza.</p>
+          <div class="hero-actions"><button class="button primary" id="hero-start">Crear mi cuenta <span>↗</span></button><button class="button quiet" data-scroll="models">Explorar modelos</button></div>
+          <div class="mini-proof"><span><b>01</b> Cuenta protegida</span><span><b>02</b> Token personal</span><span><b>03</b> Descarga directa</span></div>
+        </div>
+        <div class="hero-art"><img src="/assets/aurora-ai-hero.png" alt="Composición abstracta de creatividad digital"><span class="art-tag tag-one">TEXT / VISION</span><span class="art-tag tag-two">CREATE / EXPLORE</span></div>
+      </section>
+
+      <section class="model-section wrap" id="models">
+        <div class="section-heading"><div><p class="kicker"><span></span> ELIGE TU MOTOR</p><h2>Una herramienta para cada forma de pensar.</h2></div><p>Uncensored se activa y funciona en esta web. Para los demás servicios, solicita tus credenciales directamente por WhatsApp.</p></div>
+        <div class="model-grid" id="public-model-grid"></div>
+      </section>
+
+      <section class="privacy-band wrap">
+        <div><span class="privacy-icon">◇</span><div><h3>Conversaciones efímeras</h3><p>El portal no conserva el historial de chats ni los archivos que adjuntas. Descarga lo importante antes de cerrar o recargar.</p></div></div>
+        <p class="fine-print">Para operar el acceso sí se conservan los datos mínimos de cuenta, estado de pago y token. Los pagos por Nequi se verifican manualmente.</p>
+      </section>
+    </section>
+
+    <section id="dashboard-view" class="view wrap" hidden>
+      <div class="dashboard-head"><div><p class="kicker"><span></span> ESPACIO PERSONAL</p><h1 id="hello-title">Hola</h1><p class="muted">Administra tu acceso y entra a tu estudio.</p></div><button class="button ghost" id="logout-button">Cerrar sesión</button></div>
+      <div id="account-status"></div>
+      <section id="dashboard-models"><div class="section-heading compact"><div><h2>Selecciona un acceso</h2><p>Activa Uncensored aquí o solicita por WhatsApp las credenciales de los demás servicios.</p></div></div><div class="model-grid" id="dashboard-model-grid"></div></section>
+      <section id="payment-panel" class="panel payment-panel" hidden>
+        <div><p class="kicker"><span></span> ACTIVACIÓN MANUAL</p><h2>Uncensored · $60.000</h2><p>El pago incluye <strong>6 meses de acceso</strong>. Envía el valor por Nequi a:</p><button class="nequi-number" id="copy-nequi" type="button">312 545 2189 <span>Copiar</span></button><button class="button whatsapp payment-whatsapp" id="payment-whatsapp" type="button">Hablar con el administrador por WhatsApp</button><p class="fine-print">El token solo se genera cuando el administrador verifica la foto del comprobante.</p></div>
+        <form id="payment-form" class="stack-form"><input type="hidden" id="payment-plan"><label>Nombre de quien paga<input id="payer-name" required maxlength="100"></label><label>Tu número de WhatsApp<input id="payer-whatsapp" type="tel" required inputmode="tel" minlength="10" maxlength="20" placeholder="Ej. 312 555 1234"></label><label>Valor del plan (COP)<input id="payment-amount" required inputmode="numeric" value="60000" readonly></label><label>Referencia del pago<input id="payment-reference" required minlength="4" maxlength="80"></label><label class="receipt-field">Foto del comprobante<input id="payment-receipt" type="file" accept="image/png,image/jpeg,image/webp" required><span>PNG, JPG o WEBP · máximo 4 MB</span></label><div id="payment-receipt-preview" class="receipt-preview" hidden></div><button class="button primary" type="submit">Enviar para revisión</button><p class="form-message" id="payment-message"></p></form>
+      </section>
+      <section id="token-panel" class="panel token-panel" hidden>
+        <div><p class="kicker"><span></span> LLAVE PERSONAL</p><h2>Tu token es único</h2><p>Trátalo como una contraseña: no lo publiques ni lo compartas. Para entrar desde un equipo nuevo necesitarás usuario, contraseña y este token.</p></div>
+        <div class="token-actions"><div class="token-box"><code id="token-value">••••••••••••••••••••••••</code><button id="reveal-token" class="button quiet">Mostrar y copiar</button></div><form id="unlock-form"><label>Validar token<input id="unlock-token" type="password" autocomplete="one-time-code" required></label><button class="button primary" type="submit">Abrir estudio</button><p class="form-message" id="unlock-message"></p></form></div>
+      </section>
+    </section>
+
+    <section id="chat-view" class="chat-view" hidden>
+      <div class="chat-top"><button class="brand-button" data-home><span class="logo small">A</span><span id="chat-model-name">Aurora</span></button><div class="chat-actions"><button class="button quiet" id="download-chat">Descargar PDF</button><button class="button ghost" id="leave-chat">Salir</button></div></div>
+      <section id="messages" class="messages" aria-live="polite"><div id="welcome" class="chat-welcome"><span class="orb">A</span><p class="kicker">SESIÓN EFÍMERA</p><h1>¿Qué quieres crear hoy?</h1><p id="chat-model-description">Elige una idea y deja que tome forma.</p></div></section>
+      <form id="chat-form" class="composer"><div id="attachment-preview" class="attachment-preview" hidden></div><label class="attach-button" for="image-input" title="Adjuntar imagen">＋</label><input id="image-input" type="file" accept="image/png,image/jpeg,image/webp" hidden><textarea id="prompt" rows="1" maxlength="12000" placeholder="Escribe un mensaje…" aria-label="Mensaje"></textarea><button id="send" type="submit" aria-label="Enviar">↑</button><small><span id="connection-dot"></span><span id="status-text">Comprobando servicio…</span> · La conversación no se conserva</small></form>
+    </section>
+
+    <section id="admin-view" class="view wrap" hidden>
+      <div class="dashboard-head"><div><p class="kicker"><span></span> CONTROL DE ACCESO</p><h1>Administración</h1><p class="muted">Verifica pagos y genera tokens personales.</p></div><button class="button ghost" data-home>Volver</button></div>
+      <form id="admin-login-form" class="panel narrow stack-form"><label>Clave de administrador<input id="admin-code" type="password" required></label><button class="button primary" type="submit">Entrar</button><p class="form-message" id="admin-message"></p></form>
+      <div id="admin-list" hidden></div>
+    </section>
+  </main>
+
+  <dialog id="model-dialog" class="model-dialog">
+    <button class="dialog-close" aria-label="Cerrar">×</button><span class="model-icon" id="detail-icon">A</span><p class="kicker" id="detail-provider">MODELO</p><h2 id="detail-name">Detalles</h2><strong class="detail-price" id="detail-price"></strong><p id="detail-description" class="muted"></p><p id="detail-requirements" class="requirements-note" hidden></p><h3>Qué puedes hacer</h3><ul id="detail-capabilities" class="capability-list"></ul><div class="detail-limits"><span id="detail-theoretical"></span><span id="detail-service"></span></div><button class="button primary" id="detail-action">Elegir este modelo</button>
+  </dialog>
+
+  <dialog id="auth-dialog">
+    <button class="dialog-close" aria-label="Cerrar">×</button><span class="logo">A</span><p class="kicker">BIENVENIDO A AURORA</p><h2 id="auth-title">Inicia sesión</h2>
+    <div class="auth-tabs"><button data-auth="login" class="active">Entrar</button><button data-auth="register">Crear cuenta</button></div>
+    <form id="auth-form" class="stack-form"><label id="name-field" hidden>Nombre completo<input id="auth-name" autocomplete="name"></label><label>Usuario<input id="auth-username" autocomplete="username" required minlength="3"></label><label>Contraseña<input id="auth-password" type="password" autocomplete="current-password" required minlength="8"></label><button class="button primary" type="submit">Continuar</button><p class="form-message" id="auth-message"></p></form>
+  </dialog>
+  <div id="toast" role="status"></div>
+
+  <script>window.MathJax={tex:{inlineMath:[['\\(','\\)'],['$','$']],displayMath:[['\\[','\\]'],['$$','$$']],processEscapes:true},options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}};</script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+  <script src="/app.js?v=14" defer></script>
+</body>
+</html>
