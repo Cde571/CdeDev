@@ -8,8 +8,8 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <title>Aurora AI</title>
   <link rel="stylesheet" href="/styles.css?v=8">
-  <link rel="stylesheet" href="/admin.css?v=9">
-  <link rel="stylesheet" href="/enhancements.css?v=14">
+  <link rel="stylesheet" href="/admin.css?v=16">
+  <link rel="stylesheet" href="/enhancements.css?v=16">
 </head>
 <body>
   <div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
@@ -49,14 +49,14 @@
     <section id="dashboard-view" class="view wrap" hidden>
       <div class="dashboard-head"><div><p class="kicker"><span></span> ESPACIO PERSONAL</p><h1 id="hello-title">Hola</h1><p class="muted">Administra tu acceso y entra a tu estudio.</p></div><button class="button ghost" id="logout-button">Cerrar sesión</button></div>
       <div id="account-status"></div>
-      <section id="dashboard-models"><div class="section-heading compact"><div><h2>Selecciona un acceso</h2><p>Activa Uncensored aquí o solicita por WhatsApp las credenciales de los demás servicios.</p></div></div><div class="model-grid" id="dashboard-model-grid"></div></section>
+      <section id="token-panel" class="panel token-panel" hidden>
+        <div><p class="kicker"><span></span> TU ACCESO ACTIVO</p><h2>Entrar a Uncensored</h2><p>Tu token es único. Trátalo como una contraseña: no lo publiques ni lo compartas.</p></div>
+        <div class="token-actions"><div class="token-box"><code id="token-value">••••••••••••••••••••••••</code><button id="reveal-token" class="button quiet">Mostrar y copiar</button></div><form id="unlock-form"><label>Validar token<input id="unlock-token" type="password" autocomplete="one-time-code" required></label><button class="button primary" type="submit">Abrir estudio</button><p class="form-message" id="unlock-message"></p></form></div>
+      </section>
+      <section id="dashboard-models"><div class="section-heading compact"><div><h2>Todos los servicios</h2><p>Tu plan actual permanece visible. También puedes consultar los demás servicios por WhatsApp.</p></div></div><div class="model-grid" id="dashboard-model-grid"></div></section>
       <section id="payment-panel" class="panel payment-panel" hidden>
         <div><p class="kicker"><span></span> ACTIVACIÓN MANUAL</p><h2>Uncensored · $60.000</h2><p>El pago incluye <strong>6 meses de acceso</strong>. Envía el valor por Nequi a:</p><button class="nequi-number" id="copy-nequi" type="button">312 545 2189 <span>Copiar</span></button><button class="button whatsapp payment-whatsapp" id="payment-whatsapp" type="button">Hablar con el administrador por WhatsApp</button><p class="fine-print">El token solo se genera cuando el administrador verifica la foto del comprobante.</p></div>
         <form id="payment-form" class="stack-form"><input type="hidden" id="payment-plan"><label>Nombre de quien paga<input id="payer-name" required maxlength="100"></label><label>Tu número de WhatsApp<input id="payer-whatsapp" type="tel" required inputmode="tel" minlength="10" maxlength="20" placeholder="Ej. 312 555 1234"></label><label>Valor del plan (COP)<input id="payment-amount" required inputmode="numeric" value="60000" readonly></label><label>Referencia del pago<input id="payment-reference" required minlength="4" maxlength="80"></label><label class="receipt-field">Foto del comprobante<input id="payment-receipt" type="file" accept="image/png,image/jpeg,image/webp" required><span>PNG, JPG o WEBP · máximo 4 MB</span></label><div id="payment-receipt-preview" class="receipt-preview" hidden></div><button class="button primary" type="submit">Enviar para revisión</button><p class="form-message" id="payment-message"></p></form>
-      </section>
-      <section id="token-panel" class="panel token-panel" hidden>
-        <div><p class="kicker"><span></span> LLAVE PERSONAL</p><h2>Tu token es único</h2><p>Trátalo como una contraseña: no lo publiques ni lo compartas. Para entrar desde un equipo nuevo necesitarás usuario, contraseña y este token.</p></div>
-        <div class="token-actions"><div class="token-box"><code id="token-value">••••••••••••••••••••••••</code><button id="reveal-token" class="button quiet">Mostrar y copiar</button></div><form id="unlock-form"><label>Validar token<input id="unlock-token" type="password" autocomplete="one-time-code" required></label><button class="button primary" type="submit">Abrir estudio</button><p class="form-message" id="unlock-message"></p></form></div>
       </section>
     </section>
 
@@ -86,6 +86,6 @@
 
   <script>window.MathJax={tex:{inlineMath:[['\\(','\\)'],['$','$']],displayMath:[['\\[','\\]'],['$$','$$']],processEscapes:true},options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}};</script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
-  <script src="/app.js?v=15" defer></script>
+  <script src="/app.js?v=16" defer></script>
 </body>
 </html>

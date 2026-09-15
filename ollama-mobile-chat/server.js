@@ -36,7 +36,7 @@ const MODELS = [
 
 const mime = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
 
-function readDb() { try { return JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); } catch { return { users: [] }; } }
+function readDb() { try { const db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); db.users = Array.isArray(db.users) ? db.users : []; db.customers = Array.isArray(db.customers) ? db.customers : []; return db; } catch { return { users: [], customers: [] }; } }
 function writeDb(db) { const temp = `${DB_FILE}.tmp`; fs.writeFileSync(temp, JSON.stringify(db, null, 2)); fs.renameSync(temp, DB_FILE); }
 function json(res, status, body, headers = {}) { res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', ...headers }); res.end(JSON.stringify(body)); }
 
@@ -79,6 +79,10 @@ function cleanMessages(input) {
   if (!Array.isArray(input)) return [];
   return input.slice(-16).map(item => ({ role: item?.role === 'assistant' ? 'assistant' : 'user', content: String(item?.content || '').slice(0, 12000), image: item?.image && /^data:image\/(png|jpeg|webp);base64,/.test(item.image) ? item.image.slice(0, 6_000_000) : null })).filter(item => item.content.trim() || item.image);
 }
+
+function normalizeWhatsapp(value) { let digits = String(value || '').replace(/\D/g, '').slice(0, 15); if (digits.length === 10 && digits.startsWith('3')) digits = `57${digits}`; return digits; }
+function colombiaDate(value) { const text = String(value || ''); if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) throw new Error('Selecciona una fecha válida.'); const date = new Date(`${text}T05:00:00.000Z`); if (Number.isNaN(date.getTime())) throw new Error('Selecciona una fecha válida.'); return date; }
+function addCalendarMonths(value, months) { const date = new Date(value); date.setUTCMonth(date.getUTCMonth() + months); return date.toISOString(); }
 
 function saveReceipt(dataUrl, userId) {
   const match = String(dataUrl || '').match(/^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/=]+)$/);
@@ -162,8 +166,7 @@ const server = http.createServer(async (req, res) => {
     const user = getUser(req); if (!user) return json(res, 401, { error: 'Inicia sesión.' });
     try {
       const body = await readJson(req, 6 * 1024 * 1024); if (body.plan !== 'qwen') return json(res, 400, { error: 'Solo Uncensored se activa dentro de la web. Para los demás accesos, contacta por WhatsApp.' });
-      const payerName = String(body.payerName || '').trim().slice(0, 100); const reference = String(body.reference || '').trim().slice(0, 80); const amount = '60000'; let whatsapp = String(body.whatsapp || '').replace(/\D/g, '').slice(0, 15);
-      if (whatsapp.length === 10 && whatsapp.startsWith('3')) whatsapp = `57${whatsapp}`;
+      const payerName = String(body.payerName || '').trim().slice(0, 100); const reference = String(body.reference || '').trim().slice(0, 80); const amount = '60000'; const whatsapp = normalizeWhatsapp(body.whatsapp);
       if (payerName.length < 2 || reference.length < 4 || !amount || whatsapp.length < 10) return json(res, 400, { error: 'Completa el nombre, valor, referencia y número de WhatsApp.' });
       const receiptFile = saveReceipt(body.receipt, user.id);
       const db = readDb(); const target = db.users.find(item => item.id === user.id); target.subscription = { status: 'pending', plan: body.plan, payerName, reference, amount, whatsapp, receiptFile, claimedAt: new Date().toISOString() }; delete target.tokenHash; delete target.tokenCipher; writeDb(db);
@@ -187,7 +190,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method === 'GET' && url.pathname === '/api/admin/users') {
     if (session(req)?.role !== 'admin') return json(res, 401, { error: 'Acceso de administrador requerido.' }); const db = readDb();
-    return json(res, 200, { users: db.users.map(user => { const payment = effectiveSubscription(user); return { ...publicUser(user), payment: { ...payment, receiptUrl: payment.receiptFile ? `/api/admin/receipt/${encodeURIComponent(payment.receiptFile)}` : null } }; }) });
+    return json(res, 200, { users: db.users.map(user => { const payment = effectiveSubscription(user); return { ...publicUser(user), payment: { ...payment, receiptUrl: payment.receiptFile ? `/api/admin/receipt/${encodeURIComponent(payment.receiptFile)}` : null } }; }), customers: db.customers });
   }
   if (req.method === 'GET' && url.pathname.startsWith('/api/admin/receipt/')) {
     if (session(req)?.role !== 'admin') return json(res, 401, { error: 'Acceso de administrador requerido.' });
@@ -196,6 +199,20 @@ const server = http.createServer(async (req, res) => {
     const receiptPath = path.join(RECEIPTS_DIR, filename); if (!fs.existsSync(receiptPath)) return json(res, 404, { error: 'Comprobante no encontrado.' });
     const extension = path.extname(filename).toLowerCase(); const contentType = extension === '.png' ? 'image/png' : extension === '.webp' ? 'image/webp' : 'image/jpeg';
     res.writeHead(200, { 'content-type': contentType, 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff' }); return fs.createReadStream(receiptPath).pipe(res);
+  }
+  if (req.method === 'POST' && url.pathname === '/api/admin/customers') {
+    if (session(req)?.role !== 'admin') return json(res, 401, { error: 'Acceso de administrador requerido.' });
+    try {
+      const body = await readJson(req, 32 * 1024); const name = String(body.name || '').trim().slice(0, 100); const whatsapp = normalizeWhatsapp(body.whatsapp); const amount = String(body.amount || '').replace(/\D/g, '').slice(0, 12); const service = String(body.service || 'gpt_or_gemini').slice(0, 40); const startedAt = colombiaDate(body.startedAt); const durationMonths = Math.min(36, Math.max(0, Number.parseInt(body.durationMonths, 10) || 0));
+      if (name.length < 2 || whatsapp.length < 10 || !amount) return json(res, 400, { error: 'Completa nombre, WhatsApp, valor y fecha.' });
+      const db = readDb(); if (db.customers.some(customer => customer.whatsapp === whatsapp && customer.startedAt === startedAt.toISOString())) return json(res, 409, { error: 'Ese cliente ya está registrado en esa fecha.' });
+      const customer = { id: crypto.randomUUID(), name, whatsapp, amount, service, startedAt: startedAt.toISOString(), durationMonths: durationMonths || null, expiresAt: durationMonths ? addCalendarMonths(startedAt, durationMonths) : null, status: durationMonths ? 'active' : 'pending_duration', createdAt: new Date().toISOString() };
+      db.customers.push(customer); writeDb(db); return json(res, 201, { customer });
+    } catch (error) { return json(res, 400, { error: error.message || 'No se pudo agregar el cliente.' }); }
+  }
+  if (req.method === 'POST' && url.pathname === '/api/admin/customers/duration') {
+    if (session(req)?.role !== 'admin') return json(res, 401, { error: 'Acceso de administrador requerido.' }); const body = await readJson(req, 8 * 1024); const months = Math.min(36, Math.max(1, Number.parseInt(body.durationMonths, 10) || 1)); const db = readDb(); const customer = db.customers.find(item => item.id === body.customerId);
+    if (!customer) return json(res, 404, { error: 'Cliente no encontrado.' }); customer.durationMonths = months; customer.expiresAt = addCalendarMonths(customer.startedAt, months); customer.status = 'active'; writeDb(db); return json(res, 200, { customer });
   }
   if (req.method === 'POST' && (url.pathname === '/api/admin/approve' || url.pathname === '/api/admin/reject')) {
     if (session(req)?.role !== 'admin') return json(res, 401, { error: 'Acceso de administrador requerido.' }); const body = await readJson(req, 8 * 1024); const db = readDb(); const user = db.users.find(item => item.id === body.userId);

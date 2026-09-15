@@ -10,6 +10,8 @@ Portal web con cuentas, pagos manuales, tokens personales y chat efímero. Uncen
 4. Entra a **Administrar** con la clave local. Puedes aprobar comprobantes o dar acceso manual a cualquier cuenta registrada; en ambos casos se crea un token único.
 5. El cliente usa usuario, contraseña y token para entrar.
 
+El panel administrativo también permite registrar clientes atendidos por WhatsApp, guardar su fecha de inicio, pago, servicio y duración, y completar después una duración que haya quedado pendiente.
+
 ## Datos y privacidad
 
 - No se escribe en disco el historial de las conversaciones ni las imágenes adjuntas.

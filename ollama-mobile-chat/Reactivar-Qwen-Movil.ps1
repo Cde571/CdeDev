@@ -87,7 +87,7 @@ $tunnelStamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $tunnelOut = Join-Path $logsDir "tunnel-$tunnelStamp.out.log"
 $tunnelErr = Join-Path $logsDir "tunnel-$tunnelStamp.err.log"
 Start-Process -FilePath $tunnelExe `
-    -ArgumentList @('tunnel', '--url', 'http://127.0.0.1:4173', '--no-autoupdate') `
+    -ArgumentList @('tunnel', '--url', 'http://127.0.0.1:4173', '--no-autoupdate', '--protocol', 'http2', '--edge-ip-version', '4') `
     -WorkingDirectory $appDir -WindowStyle Hidden `
     -RedirectStandardOutput $tunnelOut -RedirectStandardError $tunnelErr | Out-Null
 
