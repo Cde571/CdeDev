@@ -6,7 +6,7 @@ Portal web con cuentas, pagos manuales, tokens personales y chat efímero. Uncen
 
 1. En Windows, ejecuta `Iniciar-Qwen-Movil.cmd`. El lanzador detecta Node.js y Ollama, crea la clave administrativa si falta y descarga automáticamente el cliente oficial de Cloudflare Tunnel.
 2. El archivo `ENLACE AURORA AI.txt` se actualizará con el nuevo enlace público.
-3. Cada cliente crea un usuario y contraseña, selecciona Uncensored, elige de 1 a 12 meses y registra su pago por Nequi con número de WhatsApp, referencia y foto del comprobante. El precio se calcula automáticamente a `$10.000 COP` por mes. Para cualquier otro servicio, usa el botón de WhatsApp y solicita sus credenciales.
+3. Cada cliente crea un usuario y contraseña, selecciona Uncensored, elige de 1 a 12 meses y registra su pago por Nequi con número de WhatsApp y foto del comprobante. La referencia de Nequi es opcional; si falta, Aurora genera una interna con la fecha. Al terminar se abre un mensaje de WhatsApp con todos los datos para que el cliente confirme el envío. El precio se calcula automáticamente a `$10.000 COP` por mes.
 4. Entra a **Administrar** con la clave local. Puedes aprobar comprobantes o dar acceso manual a cualquier cuenta registrada; en ambos casos se crea un token único.
 5. El cliente usa usuario, contraseña y token para entrar.
 

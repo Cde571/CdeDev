@@ -190,10 +190,12 @@ const server = http.createServer(async (req, res) => {
     try {
       const body = await readJson(req, 6 * 1024 * 1024); if (body.plan !== 'qwen') return json(res, 400, { error: 'Solo Uncensored se activa dentro de la web. Para los demás accesos, contacta por WhatsApp.' });
       const durationMonths = Number.parseInt(body.durationMonths, 10); if (!Number.isInteger(durationMonths) || durationMonths < 1 || durationMonths > 12) return json(res, 400, { error: 'Selecciona una duración entre 1 y 12 meses.' });
-      const payerName = String(body.payerName || '').trim().slice(0, 100); const reference = String(body.reference || '').trim().slice(0, 80); const amount = String(durationMonths * UNCENSORED_MONTHLY_PRICE); const whatsapp = normalizeWhatsapp(body.whatsapp);
-      if (payerName.length < 2 || reference.length < 4 || !amount || whatsapp.length < 10) return json(res, 400, { error: 'Completa el nombre, valor, referencia y número de WhatsApp.' });
+      const payerName = String(body.payerName || '').trim().slice(0, 100); const suppliedReference = String(body.reference || '').trim().slice(0, 80); const amount = String(durationMonths * UNCENSORED_MONTHLY_PRICE); const whatsapp = normalizeWhatsapp(body.whatsapp);
+      if (suppliedReference && suppliedReference.length < 4) return json(res, 400, { error: 'La referencia de Nequi debe tener al menos 4 caracteres o quedar vacía.' });
+      if (payerName.length < 2 || !amount || whatsapp.length < 10) return json(res, 400, { error: 'Completa el nombre y el número de WhatsApp.' });
       const receiptFile = saveReceipt(body.receipt, user.id);
-      const db = readDb(); const target = db.users.find(item => item.id === user.id); target.subscription = { status: 'pending', plan: body.plan, payerName, reference, amount, durationMonths, durationDaysRequested: durationMonths * 30, whatsapp, receiptFile, claimedAt: new Date().toISOString() }; delete target.tokenHash; delete target.tokenCipher; writeDb(db);
+      const claimedAt = new Date(); const dayCode = new Date(claimedAt.getTime() - 5 * 3600000).toISOString().slice(0, 10).replaceAll('-', ''); const reference = suppliedReference || `AUR-${dayCode}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+      const db = readDb(); const target = db.users.find(item => item.id === user.id); target.subscription = { status: 'pending', plan: body.plan, payerName, reference, referenceType: suppliedReference ? 'nequi' : 'internal', amount, durationMonths, durationDaysRequested: durationMonths * 30, whatsapp, receiptFile, claimedAt: claimedAt.toISOString() }; delete target.tokenHash; delete target.tokenCipher; writeDb(db);
       return json(res, 200, { user: publicUser(target) });
     } catch (error) { return json(res, 400, { error: error.message || 'No se pudo registrar el comprobante.' }); }
   }

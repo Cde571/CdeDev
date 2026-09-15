@@ -25,6 +25,7 @@
 .payment-whatsapp{display:block;width:100%;max-width:330px;margin-top:10px}
 .stack-form select{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:11px;background:#15101a;color:#f7f1fa;font:inherit;outline:none}
 .stack-form select:focus{border-color:var(--lime);box-shadow:0 0 0 3px #e7ff3f18}
+.field-hint{display:block;margin-top:6px;color:var(--muted);font-size:.72rem;line-height:1.4}
 .receipt-field input[type="file"]{padding:10px;background:#15101a}
 .receipt-field>span{display:block;margin-top:6px;color:var(--muted);font-size:.72rem}
 .receipt-preview{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#15101a;color:var(--muted);font-size:.78rem}
