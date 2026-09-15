@@ -100,6 +100,14 @@ function saveReceipt(dataUrl, userId) {
   return filename;
 }
 
+function deleteReceipt(filename) {
+  if (!filename) return;
+  const safeName = path.basename(String(filename));
+  if (safeName !== filename) return;
+  const receiptPath = path.join(RECEIPTS_DIR, safeName);
+  if (fs.existsSync(receiptPath)) fs.unlinkSync(receiptPath);
+}
+
 function serveStatic(req, res) {
   const pathname = new URL(req.url, 'http://localhost').pathname;
   const requested = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
@@ -208,6 +216,12 @@ const server = http.createServer(async (req, res) => {
     if (session(req)?.role !== 'admin') return json(res, 401, { error: 'Acceso de administrador requerido.' }); const db = readDb();
     return json(res, 200, { users: db.users.map(user => { const payment = effectiveSubscription(user); return { ...publicUser(user), payment: { ...payment, receiptUrl: payment.receiptFile ? `/api/admin/receipt/${encodeURIComponent(payment.receiptFile)}` : null } }; }), customers: db.customers });
   }
+  if (req.method === 'POST' && url.pathname === '/api/admin/users/delete') {
+    if (session(req)?.role !== 'admin') return json(res, 401, { error: 'Acceso de administrador requerido.' });
+    const body = await readJson(req, 8 * 1024); const db = readDb(); const index = db.users.findIndex(item => item.id === body.userId);
+    if (index < 0) return json(res, 404, { error: 'Usuario no encontrado.' });
+    const [removed] = db.users.splice(index, 1); writeDb(db); deleteReceipt(removed.subscription?.receiptFile); return json(res, 200, { ok: true });
+  }
   if (req.method === 'GET' && url.pathname.startsWith('/api/admin/receipt/')) {
     if (session(req)?.role !== 'admin') return json(res, 401, { error: 'Acceso de administrador requerido.' });
     const filename = decodeURIComponent(url.pathname.slice('/api/admin/receipt/'.length));
@@ -229,6 +243,12 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'POST' && url.pathname === '/api/admin/customers/duration') {
     if (session(req)?.role !== 'admin') return json(res, 401, { error: 'Acceso de administrador requerido.' }); const body = await readJson(req, 8 * 1024); const months = Math.min(36, Math.max(1, Number.parseInt(body.durationMonths, 10) || 1)); const db = readDb(); const customer = db.customers.find(item => item.id === body.customerId);
     if (!customer) return json(res, 404, { error: 'Cliente no encontrado.' }); customer.durationMonths = months; customer.expiresAt = addCalendarMonths(customer.startedAt, months); customer.status = 'active'; writeDb(db); return json(res, 200, { customer });
+  }
+  if (req.method === 'POST' && url.pathname === '/api/admin/customers/delete') {
+    if (session(req)?.role !== 'admin') return json(res, 401, { error: 'Acceso de administrador requerido.' });
+    const body = await readJson(req, 8 * 1024); const db = readDb(); const index = db.customers.findIndex(item => item.id === body.customerId);
+    if (index < 0) return json(res, 404, { error: 'Cliente no encontrado.' });
+    db.customers.splice(index, 1); writeDb(db); return json(res, 200, { ok: true });
   }
   if (req.method === 'POST' && (url.pathname === '/api/admin/approve' || url.pathname === '/api/admin/reject')) {
     if (session(req)?.role !== 'admin') return json(res, 401, { error: 'Acceso de administrador requerido.' }); const body = await readJson(req, 8 * 1024); const db = readDb(); const user = db.users.find(item => item.id === body.userId);

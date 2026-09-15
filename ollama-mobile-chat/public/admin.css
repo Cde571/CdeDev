@@ -17,6 +17,7 @@
 .manual-customer{display:grid;grid-template-columns:minmax(200px,.8fr) minmax(390px,1.5fr) auto;align-items:center;gap:16px;padding:18px;border:1px solid var(--line);border-radius:17px;background:#241c2b}
 .manual-customer h3{margin:10px 0 4px}.manual-customer p{margin:0;color:var(--muted)}.manual-customer a{display:inline-block;margin-top:8px;color:var(--lime)}
 .customer-duration{display:flex;align-items:end;gap:8px}.customer-duration input{width:72px}
+.button.danger{border-color:#8e3948;background:#4a2029;color:#ffd5dc}.button.danger:hover{border-color:#d85a70;background:#642b36}
 @media(max-width:1050px){.admin-row{grid-template-columns:1fr}.admin-actions{justify-content:flex-start}}
 @media(max-width:1050px){.manual-entry,.manual-customer{grid-template-columns:1fr}}
 @media(max-width:620px){.subscription-dates{grid-template-columns:1fr}.duration-field{grid-template-columns:auto 68px auto}.admin-row,.manual-customer{padding:16px}.manual-customer-form{grid-template-columns:1fr}.manual-customer-form>*{grid-column:1/-1}}
