@@ -7,7 +7,7 @@ Portal web con cuentas, pagos manuales, tokens personales y chat efímero. Uncen
 1. En Windows, ejecuta `Iniciar-Qwen-Movil.cmd`. El lanzador detecta Node.js y Ollama, crea la clave administrativa si falta y descarga automáticamente el cliente oficial de Cloudflare Tunnel.
 2. El archivo `ENLACE AURORA AI.txt` se actualizará con el nuevo enlace público.
 3. Cada cliente crea un usuario y contraseña, selecciona Uncensored y registra su pago por Nequi con número de WhatsApp, referencia y foto del comprobante. Para cualquier otro servicio, usa el botón de WhatsApp y solicita sus credenciales.
-4. Entra a **Administrar** con la clave local y aprueba el comprobante. Al aprobar se crea un token único.
+4. Entra a **Administrar** con la clave local. Puedes aprobar comprobantes o dar acceso manual a cualquier cuenta registrada; en ambos casos se crea un token único.
 5. El cliente usa usuario, contraseña y token para entrar.
 
 ## Datos y privacidad

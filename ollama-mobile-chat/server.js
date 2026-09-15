@@ -204,7 +204,7 @@ const server = http.createServer(async (req, res) => {
     const durationDays = Math.min(3650, Math.max(1, Number.parseInt(body.durationDays, 10) || 180));
     const activatedAt = new Date();
     const expiresAt = new Date(activatedAt.getTime() + durationDays * 86400000);
-    const token = `aur_${crypto.randomBytes(24).toString('base64url')}`; user.tokenHash = crypto.createHash('sha256').update(token).digest('hex'); user.tokenCipher = encryptToken(token); user.subscription = { ...user.subscription, status: 'active', durationDays, activatedAt: activatedAt.toISOString(), expiresAt: expiresAt.toISOString() }; writeDb(db);
+    const token = `aur_${crypto.randomBytes(24).toString('base64url')}`; user.tokenHash = crypto.createHash('sha256').update(token).digest('hex'); user.tokenCipher = encryptToken(token); user.subscription = { ...user.subscription, plan: 'qwen', status: 'active', durationDays, activatedAt: activatedAt.toISOString(), expiresAt: expiresAt.toISOString() }; writeDb(db);
     return json(res, 200, { ok: true, token, user: publicUser(user) });
   }
   if (req.method === 'POST' && url.pathname === '/api/admin/extend') {
